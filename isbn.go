@@ -258,13 +258,14 @@ func parseISBN(isbnStr string) (isbn ISBN) {
 	}
 
 	idx += registrantLength
+	lastIdx := len(isbnStr) - 1
 
-	isbn.publication, isbn.err = subString(isbnStr, idx, len(isbnStr)-1-idx)
+	isbn.publication, isbn.err = subString(isbnStr, idx, lastIdx-idx)
 	if isbn.err != nil {
 		return isbn
 	}
 
-	isbn.checkDigit, isbn.err = subString(isbnStr, len(isbnStr)-1, checkDigitLength)
+	isbn.checkDigit, isbn.err = subString(isbnStr, lastIdx, checkDigitLength)
 	return isbn
 }
 
