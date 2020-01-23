@@ -1,7 +1,6 @@
 package isbn
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 )
@@ -127,12 +126,4 @@ var isbn13 = ISBN{
 	registrant:        "7777",
 	publication:       "7777",
 	checkDigit:        "0",
-}
-
-func print(isbn ISBN) {
-	fmt.Println(isbn)
-	fmt.Println(isbn.IsValid())
-	isbn.Normalize()
-	fmt.Println(isbn)
-	fmt.Println(isbn.IsValid())
 }
