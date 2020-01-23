@@ -169,6 +169,17 @@ func (isbn ISBN) String() string {
 	}
 }
 
+// BarCode method creates an ISBN code without hyphens between each ISBN part.
+func (isbn ISBN) BarCode() string {
+	return fmt.Sprintf("%s%s%s%s%s",
+		isbn.prefix, // version 10 has this value empty
+		isbn.registrationGroup,
+		isbn.registrant,
+		isbn.publication,
+		isbn.checkDigit)
+
+}
+
 // ------------------------------------------------- PRIVATE METHODS -------------------------------------------------
 
 func (isbn ISBN) calculateV13CheckDigit() string {
