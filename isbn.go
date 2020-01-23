@@ -8,13 +8,16 @@ import (
 	"strconv"
 )
 
+// Version specifies the ISBN version for a particular string.
 type Version int
 
+// ISBN versions.
 const (
 	Version10 Version = 10
 	Version13 Version = 13
 )
 
+// ISBN default prefix.
 const (
 	DefaultPrefix = "978"
 )
@@ -62,6 +65,7 @@ var (
 	errWrongISBN = errors.New("wrong input ISBN format")
 )
 
+// ISBN struct defines the core ISBN logic.
 type ISBN struct {
 	version           Version
 	prefix            string
@@ -72,11 +76,13 @@ type ISBN struct {
 	err               error
 }
 
+// NewISBN function creates ISBN instance based on the input string.
 func NewISBN(isbn string) ISBN {
 	return parseISBN(isbn)
 
 }
 
+// IsValid method check the ISBN value(s) and returns true if the ISBN is valid, otherwise false.
 func (isbn ISBN) IsValid() bool {
 	if isbn.err != nil || len(isbn.checkDigit) != 1 {
 		return false
@@ -92,10 +98,13 @@ func (isbn ISBN) IsValid() bool {
 	}
 }
 
+// Version method returns the current version of ISBN instance.
 func (isbn ISBN) Version() Version {
 	return isbn.version
 }
 
+// Normalize method converts ISBN of version 10 into version 13 and/or recalculate the check digital
+// which is located at the end of this ISBN.
 func (isbn *ISBN) Normalize() {
 	if isbn.err != nil || isbn.version == Version13 && isbn.IsValid() {
 		return
@@ -106,10 +115,12 @@ func (isbn *ISBN) Normalize() {
 	isbn.checkDigit = isbn.calculateV13CheckDigit()
 }
 
+// Error method returns status error.
 func (isbn ISBN) Error() error {
 	return isbn.err
 }
 
+// String method creates a human readable format of ISBN.
 func (isbn ISBN) String() string {
 	switch isbn.version {
 	case Version10:
