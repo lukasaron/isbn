@@ -58,7 +58,7 @@ const (
 
 var (
 	// only numbers or final X (for version 10 as a check digit number)
-	isbnRegex = regexp.MustCompile(`(\d*X?x?)`)
+	isbnRegex = regexp.MustCompile(`([\dXx]+)`)
 )
 
 var (
@@ -77,25 +77,53 @@ type ISBN struct {
 }
 
 // NewISBN function creates ISBN instance based on the input string.
-func NewISBN(isbn string) ISBN {
-	return parseISBN(isbn)
+func NewISBN(isbnStr string) (isbn ISBN) {
+	numbers := isbnRegex.FindAllString(isbnStr, -1)
+	switch len(numbers) {
+	case version10Parts:
+		isbn = ISBN{
+			version:           Version10,
+			registrationGroup: numbers[version10GroupIdx],
+			registrant:        numbers[version10RegistrantIdx],
+			publication:       numbers[version10PublicationIdx],
+			checkDigit:        numbers[version10CheckIdx],
+		}
 
+	case version13Parts:
+		isbn = ISBN{
+			version:           Version13,
+			prefix:            numbers[version13PrefixIdx],
+			registrationGroup: numbers[version13GroupIdx],
+			registrant:        numbers[version13RegistrantIdx],
+			publication:       numbers[version13PublicationIdx],
+			checkDigit:        numbers[version13CheckIdx],
+		}
+
+	case versionXParts:
+		isbn = parseISBN(numbers[0])
+	default:
+		isbn.err = errWrongISBN
+	}
+
+	return isbn
 }
 
 // IsValid method check the ISBN value(s) and returns true if the ISBN is valid, otherwise false.
-func (isbn ISBN) IsValid() bool {
+func (isbn ISBN) IsValid() (valid bool) {
 	if isbn.err != nil || len(isbn.checkDigit) != 1 {
-		return false
+		return valid
 	}
 
 	switch isbn.version {
 	case Version10:
-		return isbn.calculateV10CheckDigit() == isbn.checkDigit
+		valid = isbn.calculateV10CheckDigit() == isbn.checkDigit
 	case Version13:
-		return isbn.calculateV13CheckDigit() == isbn.checkDigit
+		valid = isbn.calculateV13CheckDigit() == isbn.checkDigit
 	default:
-		return false
+		valid = false
 	}
+
+	return valid
 }
 
 // Version method returns the current version of ISBN instance.
@@ -170,39 +198,63 @@ func (isbn ISBN) calculateV10CheckDigit() string {
 		return strconv.Itoa(digit)
 	}
 
+	// special case when digit == 10
 	return "X"
 }
 
 // ------------------------------------------------ PRIVATE FUNCTIONS-------------------------------------------------
 
-func parseISBN(isbn string) ISBN {
-	numbers := isbnRegex.FindAllString(isbn, -1)
-	switch len(numbers) {
-	case version10Parts:
-		return ISBN{
-			version:           Version10,
-			registrationGroup: numbers[version10GroupIdx],
-			registrant:        numbers[version10RegistrantIdx],
-			publication:       numbers[version10PublicationIdx],
-			checkDigit:        numbers[version10CheckIdx],
-		}
+func parseISBN(isbnStr string) (isbn ISBN) {
+	idx := 0
 
-	case version13Parts:
-		return ISBN{
-			version:           Version13,
-			prefix:            numbers[version13PrefixIdx],
-			registrationGroup: numbers[version13GroupIdx],
-			registrant:        numbers[version13RegistrantIdx],
-			publication:       numbers[version13PublicationIdx],
-			checkDigit:        numbers[version13CheckIdx],
-		}
-
-	case versionXParts:
-		return parseLineISBN(numbers[0])
-
-	default:
-		return ISBN{err: errWrongISBN}
+	// load prefix
+	isbn.prefix, isbn.err = subString(isbnStr, idx, prefixLength)
+	if isbn.err != nil {
+		return isbn
 	}
+
+	// set versions and potentially correct prefix
+	if isbn.prefix != DefaultPrefix {
+		isbn.prefix = "" // version 10 doesn't have prefix
+		isbn.version = Version10
+	} else {
+		idx += prefixLength
+		isbn.version = Version13
+	}
+
+	groupLength := parseGroupLength(parseNumber(isbnStr, idx, groupLength))
+	if groupLength == 0 {
+		isbn.err = errWrongISBN
+		return isbn
+	}
+
+	isbn.registrationGroup, isbn.err = subString(isbnStr, idx, groupLength)
+	if isbn.err != nil {
+		return isbn
+	}
+
+	idx += groupLength
+
+	registrantLength := parseRegistrantLength(parseNumber(isbnStr, idx, registrantLength))
+	if registrantLength == 0 {
+		isbn.err = errWrongISBN
+		return isbn
+	}
+
+	isbn.registrant, isbn.err = subString(isbnStr, idx, registrantLength)
+	if isbn.err != nil {
+		return isbn
+	}
+
+	idx += registrantLength
+
+	isbn.publication, isbn.err = subString(isbnStr, idx, len(isbnStr)-1-idx)
+	if isbn.err != nil {
+		return isbn
+	}
+
+	isbn.checkDigit, isbn.err = subString(isbnStr, len(isbnStr)-1, checkDigitLength)
+	return isbn
 }
 
 func weightFn(version Version) func() int {
@@ -234,59 +286,6 @@ func weightSum(number string, weight func() int) int {
 	}
 
 	return sum
-}
-
-func parseLineISBN(line string) (isbn ISBN) {
-	start := 0
-
-	// load prefix
-	isbn.prefix, isbn.err = subString(line, start, prefixLength)
-	if isbn.err != nil {
-		return isbn
-	}
-
-	// set versions and potentially correct prefix
-	if isbn.prefix != DefaultPrefix {
-		isbn.prefix = ""
-		isbn.version = Version10
-	} else {
-		start += 3
-		isbn.version = Version13
-	}
-
-	groupLength := parseGroupLength(parseNumber(line, start, groupLength))
-	if groupLength == 0 {
-		isbn.err = errWrongISBN
-		return isbn
-	}
-
-	isbn.registrationGroup, isbn.err = subString(line, start, groupLength)
-	if isbn.err != nil {
-		return isbn
-	}
-
-	start += groupLength
-
-	registrantLength := parseRegistrantLength(parseNumber(line, start, registrantLength))
-	if registrantLength == 0 {
-		isbn.err = errWrongISBN
-		return isbn
-	}
-
-	isbn.registrant, isbn.err = subString(line, start, registrantLength)
-	if isbn.err != nil {
-		return isbn
-	}
-
-	start += registrantLength
-
-	isbn.publication, isbn.err = subString(line, start, publicationLength-registrantLength)
-	if isbn.err != nil {
-		return isbn
-	}
-
-	isbn.checkDigit, isbn.err = subString(line, len(line)-1, checkDigitLength)
-	return isbn
 }
 
 func parseNumber(input string, start, length int) (sum int) {
