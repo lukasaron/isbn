@@ -9,3 +9,6 @@
 ```go
 go get github.com/lukasaron/isbn
 ```
+
+## Example of usage:
+TODO
