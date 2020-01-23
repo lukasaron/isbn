@@ -55,7 +55,7 @@ const (
 
 var (
 	// only numbers or final X (for version 10 as a check digit number)
-	isbnRegex = regexp.MustCompile(`(\d+X?x?)`)
+	isbnRegex = regexp.MustCompile(`(\d*X?x?)`)
 )
 
 var (
@@ -187,7 +187,7 @@ func parseISBN(isbn string) ISBN {
 		}
 
 	case versionXParts:
-		return parseISBN(numbers[0])
+		return parseLineISBN(numbers[0])
 
 	default:
 		return ISBN{err: errWrongISBN}
