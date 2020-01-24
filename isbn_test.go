@@ -2,7 +2,6 @@ package isbn
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 )
 
@@ -12,7 +11,16 @@ func TestNewISBN_ISBN13(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn13) {
+	if isbn.String() != isbn13.String() {
+		t.Errorf("expected: %+v, got: %+v", isbn13, isbn)
+	}
+
+	isbn = NewISBN("ISBN 978-0-7777-7777-0")
+	if isbn.err != nil {
+		t.Errorf("error not expected, got: %v", isbn.err)
+	}
+
+	if isbn.String() != isbn13.String() {
 		t.Errorf("expected: %+v, got: %+v", isbn13, isbn)
 	}
 
@@ -21,7 +29,7 @@ func TestNewISBN_ISBN13(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn13) {
+	if isbn.String() != isbn13.String() {
 		t.Errorf("expected: %+v, got: %+v", isbn13, isbn)
 	}
 
@@ -30,7 +38,7 @@ func TestNewISBN_ISBN13(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn13) {
+	if isbn.String() != isbn13.String() {
 		t.Errorf("expected: %+v, got: %+v", isbn13, isbn)
 	}
 
@@ -39,7 +47,7 @@ func TestNewISBN_ISBN13(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn13) {
+	if isbn.String() != isbn13.String() {
 		t.Errorf("expected: %+v, got: %+v", isbn13, isbn)
 	}
 
@@ -48,7 +56,7 @@ func TestNewISBN_ISBN13(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn13) {
+	if isbn.String() != isbn13.String() {
 		t.Errorf("expected: %+v, got: %+v", isbn13, isbn)
 	}
 
@@ -57,7 +65,7 @@ func TestNewISBN_ISBN13(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn13) {
+	if isbn.String() != isbn13.String() {
 		t.Errorf("expected: %+v, got: %+v", isbn13, isbn)
 	}
 }
@@ -68,8 +76,8 @@ func TestNewISBN_ISBN10(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn10) {
-		t.Errorf("expected: %+v, got: %+v", isbn13, isbn)
+	if isbn.String() != isbn10.String() {
+		t.Errorf("expected: %+v, got: %+v", isbn10, isbn)
 	}
 
 	isbn = NewISBN("ISBN 0 393 04002 X")
@@ -77,7 +85,7 @@ func TestNewISBN_ISBN10(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn10) {
+	if isbn.String() != isbn10.String() {
 		t.Errorf("expected: %+v, got: %+v", isbn10, isbn)
 	}
 
@@ -86,7 +94,7 @@ func TestNewISBN_ISBN10(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn10) {
+	if isbn.String() != isbn10.String() {
 		t.Errorf("expected: %+v, got: %+v", isbn10, isbn)
 	}
 
@@ -95,7 +103,7 @@ func TestNewISBN_ISBN10(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn10) {
+	if isbn.String() != isbn10.String() {
 		t.Errorf("expected: %+v, got: %+v", isbn10, isbn)
 	}
 
@@ -104,7 +112,7 @@ func TestNewISBN_ISBN10(t *testing.T) {
 		t.Errorf("error not expected, got: %v", isbn.err)
 	}
 
-	if !reflect.DeepEqual(isbn, isbn10) {
+	if isbn.String() != isbn10.String() {
 		t.Errorf("expected: %+v, got: %+v", isbn10, isbn)
 	}
 }
@@ -140,6 +148,27 @@ func TestISBN_IsValid(t *testing.T) {
 	if isbn1.IsValid() {
 		t.Error("ISBN should have status error thus it's not valid")
 	}
+
+	isbn1 = NewISBN("ISBN-10 978-0-7777-7777-0")
+	if isbn1.IsValid() {
+		t.Error("wrong ISBN version defined")
+	}
+
+	isbn1 = NewISBN("ISBN-10 9780777777770")
+	if isbn1.IsValid() {
+		t.Error("wrong ISBN version defined")
+	}
+
+	isbn1 = NewISBN("ISBN-13 0-393-04002-X")
+	if isbn1.IsValid() {
+		t.Error("wrong ISBN version defined")
+	}
+
+	isbn1 = NewISBN("ISBN-13 039304002X")
+	if isbn1.IsValid() {
+		t.Error("wrong ISBN version defined")
+	}
+
 }
 
 func TestISBN_Error(t *testing.T) {
@@ -245,7 +274,7 @@ func TestISBN_Normalize(t *testing.T) {
 	}
 
 	isbn2.Normalize()
-	if !reflect.DeepEqual(isbn2, isbn13) {
+	if isbn2.String() != isbn13.String() {
 		t.Error("normalization of correct ISBN version 13 has no effect")
 	}
 
@@ -264,7 +293,7 @@ func TestISBN_Normalize(t *testing.T) {
 }
 
 func TestISBN_String(t *testing.T) {
-	if isbn10.String() != "ISBN 0-393-04002-X" {
+	if isbn10.String() != "ISBN-10 0-393-04002-X" {
 		t.Errorf("expected: %v, got: %v", "ISBN 0-393-04002-X", isbn10.String())
 	}
 
@@ -286,6 +315,7 @@ func TestISBN_BarCode(t *testing.T) {
 // ------------------------------------------------------ DATA ------------------------------------------------------
 
 var isbn10 = ISBN{
+	originalISBN:      "ISBN-10 0-393-04002-X",
 	version:           Version10,
 	prefix:            "",
 	registrationGroup: "0",
@@ -295,6 +325,7 @@ var isbn10 = ISBN{
 }
 
 var isbn13 = ISBN{
+	originalISBN:      "ISBN-13 978-0-7777-7777-0",
 	version:           Version13,
 	prefix:            "978",
 	registrationGroup: "0",

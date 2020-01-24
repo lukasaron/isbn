@@ -13,8 +13,9 @@ type Version int
 
 // ISBN versions.
 const (
-	Version10 Version = 10
-	Version13 Version = 13
+	VersionUnknown Version = 0
+	Version10      Version = 10
+	Version13      Version = 13
 )
 
 // ISBN default prefix.
@@ -34,11 +35,10 @@ const (
 )
 
 const (
-	prefixLength      = 3
-	groupLength       = 5
-	registrantLength  = 5
-	publicationLength = 6
-	checkDigitLength  = 1
+	prefixLength     = 3
+	groupLength      = 5
+	registrantLength = 5
+	checkDigitLength = 1
 )
 
 const (
@@ -56,9 +56,12 @@ const (
 	version13CheckIdx
 )
 
+const headerLength = 7
+
 var (
+	isbnRegex = regexp.MustCompile(`(ISBN|isbn)?[\d\s\-]+[xX]?`)
 	// only numbers or final X (for version 10 as a check digit number)
-	isbnRegex = regexp.MustCompile(`([\dXx]+)`)
+	isbnParserRegex = regexp.MustCompile(`([\dXx]+)`)
 )
 
 var (
@@ -67,6 +70,7 @@ var (
 
 // ISBN struct defines the core ISBN logic.
 type ISBN struct {
+	originalISBN      string
 	version           Version
 	prefix            string
 	registrationGroup string
@@ -78,7 +82,19 @@ type ISBN struct {
 
 // NewISBN function creates ISBN instance based on the input string.
 func NewISBN(isbnStr string) (isbn ISBN) {
-	numbers := isbnRegex.FindAllString(isbnStr, -1)
+	// check if the string is basic ISBN string
+	match := isbnRegex.MatchString(isbnStr)
+	if !match {
+		isbn.err = errWrongISBN
+		return isbn
+	}
+
+	numbers := isbnParserRegex.FindAllString(isbnStr, -1)
+	// remove the ISBN version from numbers
+	if len(numbers) > 1 && (numbers[0] == "13" || numbers[0] == "10") {
+		numbers = numbers[1:]
+	}
+
 	switch len(numbers) {
 	case version10Parts:
 		isbn = ISBN{
@@ -105,13 +121,21 @@ func NewISBN(isbnStr string) (isbn ISBN) {
 		isbn.err = errWrongISBN
 	}
 
+	// set original ISBN
+	isbn.originalISBN = isbnStr
+
 	return isbn
 }
 
 // IsValid method check the ISBN value(s) and returns true if the ISBN is valid, otherwise false.
 func (isbn ISBN) IsValid() (valid bool) {
-	if isbn.err != nil || len(isbn.checkDigit) != 1 {
-		return valid
+	if isbn.err != nil || len(isbn.checkDigit) != 1 || len(isbn.originalISBN) < headerLength {
+		return false
+	}
+
+	originVersion := isbn.getVersionFromOriginal()
+	if originVersion != VersionUnknown && originVersion != isbn.version {
+		return false
 	}
 
 	switch isbn.version {
@@ -152,12 +176,14 @@ func (isbn ISBN) Error() error {
 func (isbn ISBN) String() string {
 	switch isbn.version {
 	case Version10:
-		return fmt.Sprintf("ISBN %s-%s-%s-%s",
+		return fmt.Sprintf("ISBN-%s %s-%s-%s-%s",
+			isbn.version.String(),
 			isbn.registrationGroup,
 			isbn.registrant,
 			isbn.publication,
 			isbn.checkDigit)
 	case Version13:
+		// we do not need to print version 13, it's implicit
 		return fmt.Sprintf("ISBN %s-%s-%s-%s-%s",
 			isbn.prefix,
 			isbn.registrationGroup,
@@ -211,6 +237,29 @@ func (isbn ISBN) calculateV10CheckDigit() string {
 
 	// special case when digit == 10
 	return "X"
+}
+
+func (isbn ISBN) getVersionFromOriginal() Version {
+	if isbn.originalISBN[0] != 'i' && isbn.originalISBN[0] != 'I' {
+		return VersionUnknown
+	}
+
+	// length of the original ISBN needs to be handled before this function is called
+	possibleVersion := isbn.originalISBN[:headerLength]
+	switch possibleVersion {
+	case "isbn-10", "ISBN-10":
+		return Version10
+		// when ISBN without number -> Version 13 expected
+	case "isbn", "ISBN", "isbn-13", "ISBN-13":
+		return Version13
+	default:
+		return VersionUnknown
+	}
+}
+
+// String method gets the string value of Version type
+func (v Version) String() string {
+	return fmt.Sprintf("%d", v)
 }
 
 // ------------------------------------------------ PRIVATE FUNCTIONS-------------------------------------------------
