@@ -6,7 +6,7 @@
 //
 //		import (
 //			"fmt"
-//			isbn "github.com/lukasaron/isbn"
+//			"github.com/lukasaron/isbn"
 //		)
 //
 //		func main() {
