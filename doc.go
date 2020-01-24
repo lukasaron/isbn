@@ -1,4 +1,4 @@
-// package isbn presents the implementation of International Standard Book Number
+// Package isbn presents the implementation of International Standard Book Number
 // standard ISO 2108:2017. Input to this library can be string containing ISBN of version 10 or version 13.
 //
 // Example of usage:
