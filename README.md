@@ -1,6 +1,6 @@
 # ISBN
 ISBN library is the implementation of International Standard Book Number 
-standard ISO 2108:2017. Input to this library can be string containing 
+standard ISO 2108:2017. Input to this library can be a string containing 
 ISBN of version 10 or version 13.  
 
 [![GoDoc](https://godoc.org/github.com/lukasaron/isbn?status.svg)](https://godoc.org/github.com/lukasaron/isbn)
