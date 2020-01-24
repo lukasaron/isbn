@@ -127,7 +127,7 @@ func NewISBN(isbnStr string) (isbn ISBN) {
 	return isbn
 }
 
-// IsValid method check the ISBN value(s) and returns true if the ISBN is valid, otherwise false.
+// IsValid method checks the ISBN value(s) and returns true if the ISBN is valid, otherwise false.
 func (isbn ISBN) IsValid() (valid bool) {
 	if isbn.err != nil || len(isbn.checkDigit) != 1 || len(isbn.originalISBN) < headerLength {
 		return false
