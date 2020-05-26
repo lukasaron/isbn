@@ -65,7 +65,7 @@ var (
 )
 
 var (
-	errWrongISBN = errors.New("wrong input ISBN format")
+	ErrWrongISBN = errors.New("wrong input ISBN format")
 )
 
 // ISBN struct defines the core ISBN logic.
@@ -85,7 +85,7 @@ func NewISBN(isbnStr string) (isbn ISBN) {
 	// check if the string is basic ISBN string
 	match := isbnRegex.MatchString(isbnStr)
 	if !match {
-		isbn.err = errWrongISBN
+		isbn.err = ErrWrongISBN
 		return isbn
 	}
 
@@ -118,7 +118,7 @@ func NewISBN(isbnStr string) (isbn ISBN) {
 	case versionXParts:
 		isbn = parseISBN(numbers[0])
 	default:
-		isbn.err = errWrongISBN
+		isbn.err = ErrWrongISBN
 	}
 
 	// set original ISBN
@@ -284,7 +284,7 @@ func parseISBN(isbnStr string) (isbn ISBN) {
 
 	groupLength := parseGroupLength(parseNumber(isbnStr, idx, groupLength))
 	if groupLength == 0 {
-		isbn.err = errWrongISBN
+		isbn.err = ErrWrongISBN
 		return isbn
 	}
 
@@ -297,7 +297,7 @@ func parseISBN(isbnStr string) (isbn ISBN) {
 
 	registrantLength := parseRegistrantLength(parseNumber(isbnStr, idx, registrantLength))
 	if registrantLength == 0 {
-		isbn.err = errWrongISBN
+		isbn.err = ErrWrongISBN
 		return isbn
 	}
 
@@ -364,7 +364,7 @@ func parseNumber(input string, start, length int) (sum int) {
 
 func subString(input string, start, length int) (string, error) {
 	if len(input) < start+length {
-		return "", errWrongISBN
+		return "", ErrWrongISBN
 	}
 
 	return input[start : start+length], nil
