@@ -59,9 +59,9 @@ const (
 const headerLength = 7
 
 var (
-	isbnRegex = regexp.MustCompile(`(ISBN|isbn)?[\d\s\-]+[xX]?`)
+	isbnRegex = regexp.MustCompile(`(?i)(ISBN)?[\d\s\-]+X?`)
 	// only numbers or final X (for version 10 as a check digit number)
-	isbnParserRegex = regexp.MustCompile(`([\dXx]+)`)
+	isbnParserRegex = regexp.MustCompile(`(?i)([\dX]+)`)
 )
 
 var (
